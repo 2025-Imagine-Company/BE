@@ -1,4 +1,3 @@
-// domain/model/VoiceModel.java
 package com.example.AudIon.domain.model;
 
 import com.example.AudIon.domain.user.User;

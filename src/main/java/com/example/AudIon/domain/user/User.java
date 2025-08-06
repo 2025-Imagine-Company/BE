@@ -1,4 +1,3 @@
-// domain/user/User.java
 package com.example.AudIon.domain.user;
 
 import jakarta.persistence.*;

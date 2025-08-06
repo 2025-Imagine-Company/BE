@@ -1,4 +1,3 @@
-// repository/nft/NftRepository.java
 package com.example.AudIon.repository.nft;
 
 import com.example.AudIon.domain.nft.Nft;

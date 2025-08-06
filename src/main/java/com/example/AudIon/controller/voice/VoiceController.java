@@ -1,14 +1,14 @@
-// controller/voice/VoiceController.java
 package com.example.AudIon.controller.voice;
 
-import com.audion.domain.user.User;
-import com.audion.domain.voice.VoiceFile;
-import com.audion.dto.voice.VoiceUploadResponse;
-import com.audion.repository.user.UserRepository;
-import com.audion.repository.voice.VoiceFileRepository;
-import com.audion.service.ai.AiService;
-import com.audion.service.s3.S3Service;
+import com.example.AudIon.domain.user.User;
+import com.example.AudIon.domain.voice.VoiceFile;
+import com.example.AudIon.dto.voice.VoiceUploadResponse;
+import com.example.AudIon.repository.user.UserRepository;
+import com.example.AudIon.repository.voice.VoiceFileRepository;
+import com.example.AudIon.service.ai.AiService;
+import com.example.AudIon.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,7 +25,7 @@ public class VoiceController {
     private final VoiceFileRepository voiceFileRepository;
     private final AiService aiService;
 
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<VoiceUploadResponse> uploadVoice(
             @RequestParam("file") MultipartFile file,
             @RequestParam("walletAddress") String walletAddress,

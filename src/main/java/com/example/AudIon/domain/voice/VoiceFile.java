@@ -1,4 +1,3 @@
-// domain/voice/VoiceFile.java
 package com.example.AudIon.domain.voice;
 
 import com.example.AudIon.domain.user.User;
@@ -16,8 +15,7 @@ public class VoiceFile {
     @GeneratedValue
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne @JoinColumn(name = "user_id")
     private User user;
 
     @Column(nullable = false)

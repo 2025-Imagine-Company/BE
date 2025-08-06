@@ -1,4 +1,3 @@
-// dto/voice/VoiceUploadResponse.java
 package com.example.AudIon.dto.voice;
 
 import lombok.Data;
