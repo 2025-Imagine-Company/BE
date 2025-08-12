@@ -1,10 +1,11 @@
 package com.example.AudIon.dto.voice;
 
-import lombok.Data;
+import lombok.Getter; import lombok.Setter;
 
-@Data
+@Getter @Setter
 public class VoiceUploadResponse {
     private String fileId;
     private String fileUrl;
     private Float duration;
+    private String status; // UPLOADED/TRAINING/READY/FAILED
 }

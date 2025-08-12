@@ -4,6 +4,10 @@ spring:
     username: audion_user
     password: 1234
     driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+    baseline-on-migrate: true
   jpa:
     hibernate:
       ddl-auto: update
@@ -11,6 +15,13 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+jwt:
+  secret: o1qk7t9vY7g1Rr7qkq0wV9y2t1A2L7v8t6h2C0l5r9Qy2w6x8s4m3p0n5u7a9c1   # 환경변수로 주입 권장
+  exp-hours: 12
+  issuer: AudIon
+  kid: v1
+
 
 cloud:
   aws:

@@ -1,7 +1,16 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.postgresql:postgresql:42.7.3'
+    }
+}
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.5.4'
+	id 'org.springframework.boot' version '3.3.4'
 	id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.flywaydb.flyway' version '10.16.0'
 }
 
 group = 'com.example'
@@ -19,8 +28,14 @@ repositories {
 
 dependencies {
 
+    implementation 'org.web3j:core:4.10.3'                  // 서명 검증
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'        // JWT
+    runtimeOnly   'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly   'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+
     // swagger-ui
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -36,9 +51,18 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     // postgreSQL
-    runtimeOnly 'org.postgresql:postgresql:42.7.3'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.postgresql:postgresql:42.7.3'
 }
 
+flyway {
+    url = 'jdbc:postgresql://localhost:5432/audion_db' // DB 주소
+    user = 'audion_user'                             // DB 유저명
+    password = '1234'                              // DB 비밀번호
+    locations = ['classpath:db/migration']
+    driver = 'org.postgresql.Driver'
+    baselineOnMigrate = true                         // 기존 DB에 테이블 있을 때
+}
 tasks.named('test') {
 	useJUnitPlatform()
 }
