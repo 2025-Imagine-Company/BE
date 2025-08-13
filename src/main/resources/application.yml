@@ -35,4 +35,6 @@ cloud:
 
 ai:
   server:
-    url: http://ai-server:5000
+    url: http://ai-server:8081
+xauth:
+  secret: 1234
