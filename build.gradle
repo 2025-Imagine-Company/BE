@@ -28,12 +28,14 @@ repositories {
 
 dependencies {
 
+    implementation 'me.paulschwarz:spring-dotenv:2.5.4'     // .env file support
     implementation 'org.web3j:core:4.10.3'                  // 서명 검증
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'        // JWT
     runtimeOnly   'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly   'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation "commons-io:commons-io:2.16.1"
     // swagger-ui
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
@@ -52,6 +54,7 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'com.h2database:h2'
 
     // postgreSQL
     implementation 'org.flywaydb:flyway-core'
@@ -59,12 +62,12 @@ dependencies {
 }
 
 flyway {
-    url = 'jdbc:postgresql://localhost:5432/audion_db' // DB 주소
-    user = 'audion_user'                             // DB 유저명
-    password = '1234'                              // DB 비밀번호
+    url = System.getenv('DATABASE_URL') ?: 'jdbc:postgresql://localhost:5432/audion_db'
+    user = System.getenv('DATABASE_USERNAME') ?: 'audion_user'
+    password = System.getenv('DATABASE_PASSWORD') ?: ''
     locations = ['classpath:db/migration']
     driver = 'org.postgresql.Driver'
-    baselineOnMigrate = true                         // 기존 DB에 테이블 있을 때
+    baselineOnMigrate = true
 }
 tasks.named('test') {
 	useJUnitPlatform()

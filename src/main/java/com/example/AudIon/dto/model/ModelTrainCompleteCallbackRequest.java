@@ -91,10 +91,10 @@ public class ModelTrainCompleteCallbackRequest {
         return "ModelTrainCompleteCallbackRequest{" +
                 "modelId='" + modelId + '\'' +
                 ", status='" + status + '\'' +
-                ", modelPath='" + modelPath + '\'' +
-                ", previewUrl='" + previewUrl + '\'' +
+                ", modelPath='[REDACTED]'" +
+                ", previewUrl='[REDACTED]'" +
                 ", trainingDurationSeconds=" + trainingDurationSeconds +
-                ", jobId='" + jobId + '\'' +
+                ", jobId='[REDACTED]'" +
                 '}';
     }
 }

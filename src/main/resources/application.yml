@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/audion_db
-    username: audion_user
-    password: 1234
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/audion_db}
+    username: ${DATABASE_USERNAME:audion_user}
+    password: ${DATABASE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   flyway:
     enabled: false
@@ -17,24 +17,24 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 jwt:
-  secret: o1qk7t9vY7g1Rr7qkq0wV9y2t1A2L7v8t6h2C0l5r9Qy2w6x8s4m3p0n5u7a9c1   # 환경변수로 주입 권장
-  exp-hours: 12
-  issuer: AudIon
-  kid: v1
+  secret: ${JWT_SECRET:}
+  exp-hours: ${JWT_EXP_HOURS:12}
+  issuer: ${JWT_ISSUER:AudIon}
+  kid: ${JWT_KID:v1}
 
 
 cloud:
   aws:
     credentials:
-      access-key: <AWS_ACCESS_KEY>
-      secret-key: <AWS_SECRET_KEY>
+      access-key: ${AWS_ACCESS_KEY:}
+      secret-key: ${AWS_SECRET_KEY:}
     s3:
-      bucket: <YOUR_BUCKET_NAME>
+      bucket: ${AWS_S3_BUCKET:}
     region:
-      static: ap-northeast-2
+      static: ${AWS_REGION:ap-northeast-2}
 
 ai:
   server:
-    url: http://ai-server:8081
+    url: ${AI_SERVER_URL:http://ai-server:8081}
 xauth:
-  secret: 1234
+  secret: ${XAUTH_SECRET:}

@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+jwt:
+  secret: test-secret-key-for-testing-only-32-bytes-long-minimum
+  exp-hours: 1
+  issuer: AudIon-Test
+  kid: test
+
+cloud:
+  aws:
+    credentials:
+      access-key: test
+      secret-key: test
+    s3:
+      bucket: test-bucket
+    region:
+      static: us-east-1
+
+ai:
+  server:
+    url: http://localhost:8081
+
+xauth:
+  secret: test-secret
