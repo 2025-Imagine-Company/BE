@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/audion_db}
-    username: ${DATABASE_USERNAME:audion_user}
-    password: ${DATABASE_PASSWORD:}
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   flyway:
     enabled: false
@@ -17,24 +17,24 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 jwt:
-  secret: ${JWT_SECRET:}
-  exp-hours: ${JWT_EXP_HOURS:12}
-  issuer: ${JWT_ISSUER:AudIon}
-  kid: ${JWT_KID:v1}
+  secret: ${JWT_SECRET}
+  exp-hours: ${JWT_EXP_HOURS}
+  issuer: ${JWT_ISSUER}
+  kid: ${JWT_KID}
 
 
 cloud:
   aws:
     credentials:
-      access-key: ${AWS_ACCESS_KEY:}
-      secret-key: ${AWS_SECRET_KEY:}
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
     s3:
-      bucket: ${AWS_S3_BUCKET:}
+      bucket: ${AWS_S3_BUCKET}
     region:
-      static: ${AWS_REGION:ap-northeast-2}
+      static: ${AWS_REGION}
 
 ai:
   server:
-    url: ${AI_SERVER_URL:http://ai-server:8081}
+    url: ${AI_SERVER_URL}
 xauth:
-  secret: ${XAUTH_SECRET:}
+  secret: ${XAUTH_SECRET}
