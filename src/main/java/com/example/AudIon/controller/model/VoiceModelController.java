@@ -1,5 +1,6 @@
 package com.example.AudIon.controller.model;
 
+import com.example.AudIon.config.security.JwtAuthenticationFilter.Web3AuthenticatedUser;
 import com.example.AudIon.domain.model.VoiceModel;
 import com.example.AudIon.domain.user.User;
 import com.example.AudIon.domain.voice.VoiceFile;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -38,18 +40,24 @@ public class VoiceModelController {
      */
     @PostMapping
     public ResponseEntity<?> createModel(
-            @RequestParam String userId,
             @RequestParam String voiceFileId,
-            @RequestParam(required = false) String modelName
+            @RequestParam(required = false) String modelName,
+            Authentication authentication
     ) {
         try {
-            UUID userUuid = UUID.fromString(userId);
+            Web3AuthenticatedUser authUser = (Web3AuthenticatedUser) authentication.getPrincipal();
+            UUID userUuid = UUID.fromString(authUser.getUserId());
             UUID voiceFileUuid = UUID.fromString(voiceFileId);
 
             User user = userRepository.findById(userUuid)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + authUser.getUserId()));
             VoiceFile voiceFile = voiceFileRepository.findById(voiceFileUuid)
                     .orElseThrow(() -> new IllegalArgumentException("VoiceFile not found: " + voiceFileId));
+                    
+            // Security check: Verify the voice file belongs to the authenticated user
+            if (!voiceFile.getWalletAddress().equalsIgnoreCase(authUser.getWalletAddress())) {
+                return ResponseEntity.status(403).body(Map.of("error", "Access denied: Voice file does not belong to you"));
+            }
 
             VoiceModel model = voiceModelService.createModel(user, voiceFile, modelName);
 
@@ -131,11 +139,17 @@ public class VoiceModelController {
      * 모델 상태/정보 조회
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> getModel(@PathVariable String id) {
+    public ResponseEntity<?> getModel(@PathVariable String id, Authentication authentication) {
         try {
+            Web3AuthenticatedUser authUser = (Web3AuthenticatedUser) authentication.getPrincipal();
             UUID modelId = UUID.fromString(id);
             VoiceModel model = voiceModelRepository.findById(modelId)
                     .orElseThrow(() -> new IllegalArgumentException("Model not found: " + id));
+
+            // Security check: Verify the model belongs to the authenticated user
+            if (!model.getUser().getId().toString().equals(authUser.getUserId())) {
+                return ResponseEntity.status(403).body(Map.of("error", "Access denied: Model does not belong to you"));
+            }
 
             return ResponseEntity.ok(Map.of(
                     "modelId", model.getId().toString(),
@@ -159,19 +173,20 @@ public class VoiceModelController {
     }
 
     /**
-     * 사용자별 모델 목록 조회
+     * 사용자별 모델 목록 조회 (인증된 사용자의 모델만)
      */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserModels(@PathVariable String userId) {
+    @GetMapping("/my-models")
+    public ResponseEntity<?> getMyModels(Authentication authentication) {
         try {
-            UUID userUuid = UUID.fromString(userId);
+            Web3AuthenticatedUser authUser = (Web3AuthenticatedUser) authentication.getPrincipal();
+            UUID userUuid = UUID.fromString(authUser.getUserId());
             var models = voiceModelService.getModelsByUser(userUuid);
             return ResponseEntity.ok(models);
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid user ID format"));
         } catch (Exception e) {
-            log.error("Error retrieving user models: {}", userId, e);
+            log.error("Error retrieving user models: {}", authentication.getName(), e);
             return ResponseEntity.internalServerError().body(Map.of("error", "Failed to retrieve user models"));
         }
     }

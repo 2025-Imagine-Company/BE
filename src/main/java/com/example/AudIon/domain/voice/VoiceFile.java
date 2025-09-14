@@ -31,6 +31,11 @@ public class VoiceFile {
     @JoinColumn(name = "user_id", nullable = false)
     @NotNull
     private User user;
+    
+    @Column(name = "wallet_address", length = 42, nullable = false)
+    @NotNull
+    @Size(min = 42, max = 42)
+    private String walletAddress; // Direct wallet access for performance
 
     @Column(name = "file_url", nullable = false, length = 500)
     @NotNull
@@ -194,6 +199,10 @@ public class VoiceFile {
         }
         if (isProcessed == null) {
             isProcessed = false;
+        }
+        // Auto-sync walletAddress from User if not set
+        if (walletAddress == null && user != null) {
+            walletAddress = user.getWalletAddress();
         }
     }
 

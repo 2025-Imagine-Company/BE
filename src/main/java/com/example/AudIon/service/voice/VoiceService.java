@@ -100,7 +100,7 @@ public class VoiceService {
     }
 
     /**
-     * 음성 파일 조회
+     * 음성 파일 조회 (보안 검사 없음 - 내부 사용)
      */
     @Transactional(readOnly = true)
     public VoiceFile getVoiceFile(UUID id) {
@@ -110,6 +110,21 @@ public class VoiceService {
 
         return voiceFileRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Voice file not found: " + id));
+    }
+
+    /**
+     * 음성 파일 조회 (보안 검사 포함 - 컨트롤러에서 사용)
+     */
+    @Transactional(readOnly = true)
+    public VoiceFile getVoiceFile(UUID id, String walletAddress) {
+        VoiceFile voiceFile = getVoiceFile(id);
+        
+        // Security check: Verify ownership using direct walletAddress field
+        if (!voiceFile.getWalletAddress().equalsIgnoreCase(walletAddress)) {
+            throw new IllegalArgumentException("Access denied: Voice file does not belong to you");
+        }
+        
+        return voiceFile;
     }
 
     /**
@@ -131,8 +146,8 @@ public class VoiceService {
     public boolean deleteVoiceFile(UUID id, String walletAddress) {
         VoiceFile voiceFile = getVoiceFile(id);
 
-        // 권한 확인
-        if (!voiceFile.getUser().getWalletAddress().equals(walletAddress)) {
+        // 권한 확인 - Direct wallet address comparison for better performance
+        if (!voiceFile.getWalletAddress().equalsIgnoreCase(walletAddress)) {
             throw new IllegalArgumentException("Access denied: file belongs to different user");
         }
 
@@ -193,7 +208,16 @@ public class VoiceService {
 
     private User findOrCreateUser(String walletAddress) {
         return userRepository.findByWalletAddress(walletAddress)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + walletAddress));
+                .orElseGet(() -> {
+                    log.info("Creating new user for wallet address: {}", walletAddress);
+                    User newUser = User.builder()
+                            .walletAddress(walletAddress)
+                            .createdAt(LocalDateTime.now())
+                            .build();
+                    User savedUser = userRepository.save(newUser);
+                    log.info("Created new user with ID: {} for wallet: {}", savedUser.getId(), walletAddress);
+                    return savedUser;
+                });
     }
 
     private S3Service.S3UploadResult uploadToS3(MultipartFile file, String walletAddress) {
@@ -209,6 +233,7 @@ public class VoiceService {
     private VoiceFile createVoiceFile(MultipartFile file, User user, S3Service.S3UploadResult uploadResult, Float duration) {
         return VoiceFile.builder()
                 .user(user)
+                .walletAddress(user.getWalletAddress()) // Set wallet address directly
                 .fileUrl(uploadResult.publicUrl() != null ? uploadResult.publicUrl() : uploadResult.s3Url())
                 .s3Key(uploadResult.key()) // S3에서의 실제 키 저장
                 .originalFilename(sanitizeFilename(file.getOriginalFilename()))

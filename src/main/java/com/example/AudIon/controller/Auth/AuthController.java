@@ -1,5 +1,6 @@
 package com.example.AudIon.controller.Auth;
 
+import com.example.AudIon.dto.auth.LoginRequest;
 import com.example.AudIon.service.Auth.AuthService;
 import com.example.AudIon.service.Auth.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,63 +21,39 @@ public class AuthController {
     private final JwtUtil jwtUtil;
 
     /**
-     * Nonce 발급 (Web3 로그인 1단계)
-     */
-    @PostMapping("/nonce")
-    public ResponseEntity<?> issueNonce(
-            @RequestParam String walletAddress,
-            HttpServletRequest request) {
-
-        try {
-            String clientIp = getClientIpAddress(request);
-            String userAgent = request.getHeader("User-Agent");
-
-            String nonce = authService.issueNonce(walletAddress, clientIp, userAgent);
-
-            return ResponseEntity.ok(Map.of(
-                    "nonce", nonce,
-                    "message", "AudIon Login:\nnonce=" + nonce,
-                    "expiresInMinutes", 5
-            ));
-
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid wallet address for nonce request: {}", walletAddress);
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-
-        } catch (Exception e) {
-            log.error("Failed to issue nonce for wallet: {}", walletAddress, e);
-            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to generate nonce"));
-        }
-    }
-
-    /**
-     * Web3 로그인 (서명 검증 후 JWT 발급)
+     * Modern Web3 Login (단일 단계)
+     * 지갑에서 서명된 메시지를 받아 JWT 발급
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(
-            @RequestParam String walletAddress,
-            @RequestParam String signature,
+            @RequestBody LoginRequest loginRequest,
             HttpServletRequest request) {
 
         try {
             String clientIp = getClientIpAddress(request);
             String userAgent = request.getHeader("User-Agent");
 
-            String token = authService.login(walletAddress, signature, clientIp, userAgent);
+            String token = authService.login(
+                loginRequest.getWalletAddress(), 
+                loginRequest.getMessage(),
+                loginRequest.getSignature(), 
+                clientIp, 
+                userAgent
+            );
 
             return ResponseEntity.ok(Map.of(
                     "token", token,
                     "type", "Bearer",
-                    "walletAddress", walletAddress.toLowerCase(),
+                    "walletAddress", loginRequest.getWalletAddress().toLowerCase(),
                     "expiresInHours", 12
             ));
 
         } catch (IllegalArgumentException e) {
-            log.warn("Login failed for wallet {}: {}", walletAddress, e.getMessage());
+            log.warn("Login failed for wallet {}: {}", loginRequest.getWalletAddress(), e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
 
         } catch (Exception e) {
-            log.error("Login error for wallet: {}", walletAddress, e);
+            log.error("Login error for wallet: {}", loginRequest.getWalletAddress(), e);
             return ResponseEntity.internalServerError().body(Map.of("error", "Login failed"));
         }
     }
@@ -126,32 +103,6 @@ public class AuthController {
         }
     }
 
-    /**
-     * Nonce 상태 확인 (디버깅용)
-     */
-    @GetMapping("/nonce/{walletAddress}")
-    public ResponseEntity<?> getNonceStatus(@PathVariable String walletAddress) {
-        try {
-            var nonce = authService.getNonce(walletAddress);
-
-            if (nonce == null) {
-                return ResponseEntity.ok(Map.of("hasNonce", false));
-            }
-
-            return ResponseEntity.ok(Map.of(
-                    "hasNonce", true,
-                    "isValid", nonce.isValid(),
-                    "isUsed", nonce.isUsed(),
-                    "isExpired", nonce.isExpired(),
-                    "secondsUntilExpiry", nonce.getSecondsUntilExpiry(),
-                    "createdAt", nonce.getCreatedAt()
-            ));
-
-        } catch (Exception e) {
-            log.error("Error checking nonce status for wallet: {}", walletAddress, e);
-            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to check nonce status"));
-        }
-    }
 
     /**
      * 클라이언트 IP 주소 추출 (프록시 고려)

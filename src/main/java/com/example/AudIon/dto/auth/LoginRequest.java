@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,7 +15,9 @@ public class LoginRequest {
     private String walletAddress;
 
     @NotBlank
-    // 65바이트(130 hex) + 0x
+    private String message;
+
+    @NotBlank
     @Pattern(regexp = "^0x[0-9a-fA-F]{130}$", message = "invalid signature")
     private String signature;
 }

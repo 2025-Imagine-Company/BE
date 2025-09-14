@@ -55,7 +55,9 @@ public class AiService {
             log.info("Sending training request to AI server for voiceFile: {}", voiceFile.getId());
 
             String trainUrl = aiServerUrl + "/train";
-            ResponseEntity<Map> response = restTemplate.postForEntity(trainUrl, entity, Map.class);
+            ResponseEntity<?> rawResponse = restTemplate.postForEntity(trainUrl, entity, Map.class);
+            @SuppressWarnings("unchecked")
+            ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) rawResponse;
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 String jobId = (String) response.getBody().get("jobId");
@@ -97,7 +99,9 @@ public class AiService {
             HttpEntity<?> entity = new HttpEntity<>(headers);
             String statusUrl = aiServerUrl + "/train/status/" + jobId;
 
-            ResponseEntity<Map> response = restTemplate.exchange(statusUrl, HttpMethod.GET, entity, Map.class);
+            ResponseEntity<?> rawResponse = restTemplate.exchange(statusUrl, HttpMethod.GET, entity, Map.class);
+            @SuppressWarnings("unchecked")
+            ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) rawResponse;
 
             if (response.getStatusCode().is2xxSuccessful()) {
                 return response.getBody();
@@ -126,7 +130,9 @@ public class AiService {
             HttpEntity<?> entity = new HttpEntity<>(headers);
             String cancelUrl = aiServerUrl + "/train/cancel/" + jobId;
 
-            ResponseEntity<Map> response = restTemplate.exchange(cancelUrl, HttpMethod.POST, entity, Map.class);
+            ResponseEntity<?> rawResponse = restTemplate.exchange(cancelUrl, HttpMethod.POST, entity, Map.class);
+            @SuppressWarnings("unchecked")
+            ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) rawResponse;
 
             return response.getStatusCode().is2xxSuccessful();
 

@@ -11,7 +11,5 @@ public class NftMintRequest {
     @Pattern(regexp = "^[0-9a-fA-F-]{36}$", message = "Invalid UUID format")
     private String modelId;
     
-    @NotBlank(message = "Owner wallet address is required")
-    @Pattern(regexp = "^0x[0-9a-fA-F]{40}$", message = "Invalid Ethereum wallet address format")
-    private String ownerWallet;
+    // Note: ownerWallet removed - will be taken from JWT authentication
 }

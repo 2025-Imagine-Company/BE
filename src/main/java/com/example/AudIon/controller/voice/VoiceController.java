@@ -1,11 +1,13 @@
 package com.example.AudIon.controller.voice;
 
+import com.example.AudIon.config.security.JwtAuthenticationFilter.Web3AuthenticatedUser;
 import com.example.AudIon.dto.voice.VoiceUploadResponse;
 import com.example.AudIon.service.voice.VoiceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,10 +24,13 @@ public class VoiceController {
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadVoice(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("walletAddress") String walletAddress,
-            @RequestParam(value = "duration", required = false) Float duration
+            @RequestParam(value = "duration", required = false) Float duration,
+            Authentication authentication
     ) {
         try {
+            Web3AuthenticatedUser user = (Web3AuthenticatedUser) authentication.getPrincipal();
+            String walletAddress = user.getWalletAddress();
+            
             log.info("Voice upload request - walletAddress: {}, filename: {}",
                     walletAddress, file.getOriginalFilename());
 
@@ -47,9 +52,12 @@ public class VoiceController {
     }
 
     @GetMapping("/{fileId}")
-    public ResponseEntity<?> getVoiceFile(@PathVariable String fileId) {
+    public ResponseEntity<?> getVoiceFile(@PathVariable String fileId, Authentication authentication) {
         try {
-            var voiceFile = voiceService.getVoiceFile(java.util.UUID.fromString(fileId));
+            Web3AuthenticatedUser user = (Web3AuthenticatedUser) authentication.getPrincipal();
+            String userWallet = user.getWalletAddress();
+            
+            var voiceFile = voiceService.getVoiceFile(java.util.UUID.fromString(fileId), userWallet);
             return ResponseEntity.ok(voiceFile);
 
         } catch (IllegalArgumentException e) {
@@ -60,14 +68,17 @@ public class VoiceController {
         }
     }
 
-    @GetMapping("/user/{walletAddress}")
-    public ResponseEntity<?> getUserVoiceFiles(@PathVariable String walletAddress) {
+    @GetMapping("/my-files")
+    public ResponseEntity<?> getMyVoiceFiles(Authentication authentication) {
         try {
+            Web3AuthenticatedUser user = (Web3AuthenticatedUser) authentication.getPrincipal();
+            String walletAddress = user.getWalletAddress();
+            
             var voiceFiles = voiceService.getUserVoiceFiles(walletAddress);
             return ResponseEntity.ok(voiceFiles);
 
         } catch (Exception e) {
-            log.error("Error retrieving user voice files: {}", walletAddress, e);
+            log.error("Error retrieving user voice files: {}", authentication.getName(), e);
             return ResponseEntity.internalServerError().body(Map.of("error", "파일 목록 조회에 실패했습니다."));
         }
     }
@@ -75,8 +86,11 @@ public class VoiceController {
     @DeleteMapping("/{fileId}")
     public ResponseEntity<?> deleteVoiceFile(
             @PathVariable String fileId,
-            @RequestParam String walletAddress) {
+            Authentication authentication) {
         try {
+            Web3AuthenticatedUser user = (Web3AuthenticatedUser) authentication.getPrincipal();
+            String walletAddress = user.getWalletAddress();
+            
             boolean deleted = voiceService.deleteVoiceFile(java.util.UUID.fromString(fileId), walletAddress);
 
             if (deleted) {
