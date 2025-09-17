@@ -11,7 +11,8 @@ COPY gradlew gradlew.bat build.gradle settings.gradle ./
 COPY src/ src/
 
 # Make gradlew executable and build the application
-RUN chmod +x gradlew && ./gradlew build -x test
+RUN ./gradlew build -x test --no-daemon --parallel \
+    --build-cache --configuration-cache
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine
