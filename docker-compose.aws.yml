@@ -14,7 +14,7 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_DB=audion_db
+      - POSTGRES_DB=audionDB
       - POSTGRES_USER=audion_user
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
     ports:

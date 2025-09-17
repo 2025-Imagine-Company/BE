@@ -6,6 +6,7 @@ target/
 # IDE files
 .idea/
 .vscode/
+.claude
 *.iml
 *.ipr
 *.iws
