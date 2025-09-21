@@ -4,6 +4,8 @@ import com.example.AudIon.config.security.JwtAuthenticationFilter.Web3Authentica
 import com.example.AudIon.domain.model.VoiceModel;
 import com.example.AudIon.domain.user.User;
 import com.example.AudIon.domain.voice.VoiceFile;
+import com.example.AudIon.dto.common.PageRequest;
+import com.example.AudIon.dto.common.PagedResponse;
 import com.example.AudIon.dto.model.ModelTrainCompleteCallbackRequest;
 import com.example.AudIon.repository.model.VoiceModelRepository;
 import com.example.AudIon.repository.user.UserRepository;
@@ -187,6 +189,44 @@ public class VoiceModelController {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid user ID format"));
         } catch (Exception e) {
             log.error("Error retrieving user models: {}", authentication.getName(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to retrieve user models"));
+        }
+    }
+
+    /**
+     * 사용자별 모델 목록 조회 (페이지네이션)
+     */
+    @GetMapping("/my-models/paged")
+    public ResponseEntity<?> getMyModelsPaged(
+            @Valid PageRequest pageRequest,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String search,
+            Authentication authentication) {
+        try {
+            Web3AuthenticatedUser authUser = (Web3AuthenticatedUser) authentication.getPrincipal();
+            UUID userUuid = UUID.fromString(authUser.getUserId());
+            
+            PagedResponse<VoiceModel> result;
+            
+            if (status != null && !status.trim().isEmpty()) {
+                // Filter by status
+                VoiceModel.Status modelStatus = VoiceModel.Status.valueOf(status.toUpperCase());
+                result = voiceModelService.getModelsByUserAndStatus(userUuid, modelStatus, pageRequest.toSpringPageRequest());
+            } else if (search != null && !search.trim().isEmpty()) {
+                // Search by model name
+                result = voiceModelService.searchModelsByName(userUuid, search, pageRequest.toSpringPageRequest());
+            } else {
+                // Get all models
+                result = voiceModelService.getModelsByUserPaged(userUuid, pageRequest.toSpringPageRequest());
+            }
+            
+            return ResponseEntity.ok(result);
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid parameter in paged models request: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error retrieving paged user models: {}", authentication.getName(), e);
             return ResponseEntity.internalServerError().body(Map.of("error", "Failed to retrieve user models"));
         }
     }

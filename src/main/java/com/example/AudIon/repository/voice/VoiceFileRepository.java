@@ -1,6 +1,8 @@
 package com.example.AudIon.repository.voice;
 
 import com.example.AudIon.domain.voice.VoiceFile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -115,4 +117,36 @@ public interface VoiceFileRepository extends JpaRepository<VoiceFile, UUID> {
      * 사용자별 최근 파일들
      */
     List<VoiceFile> findTop5ByUserWalletAddressOrderByUploadedAtDesc(String walletAddress);
+
+    // Pagination methods
+    /**
+     * 사용자의 지갑 주소로 음성 파일 목록 조회 (페이지네이션)
+     */
+    Page<VoiceFile> findByUserWalletAddress(String walletAddress, Pageable pageable);
+
+    /**
+     * 특정 사용자의 음성 파일 목록 조회 (페이지네이션)
+     */
+    Page<VoiceFile> findByUserId(UUID userId, Pageable pageable);
+
+    /**
+     * 특정 상태의 음성 파일들 조회 (페이지네이션)
+     */
+    Page<VoiceFile> findByStatus(VoiceFile.Status status, Pageable pageable);
+
+    /**
+     * 사용자별 특정 상태의 음성 파일들 조회 (페이지네이션)
+     */
+    Page<VoiceFile> findByUserWalletAddressAndStatus(String walletAddress, VoiceFile.Status status, Pageable pageable);
+
+    /**
+     * 검색 기능 추가 - 파일명으로 검색 (페이지네이션)
+     */
+    Page<VoiceFile> findByUserWalletAddressAndOriginalFilenameContainingIgnoreCase(
+            String walletAddress, String filename, Pageable pageable);
+
+    /**
+     * 특정 기간 내 업로드된 파일들 조회 (페이지네이션)
+     */
+    Page<VoiceFile> findByUploadedAtBetween(LocalDateTime start, LocalDateTime end, Pageable pageable);
 }

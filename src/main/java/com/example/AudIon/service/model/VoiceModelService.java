@@ -3,9 +3,12 @@ package com.example.AudIon.service.model;
 import com.example.AudIon.domain.model.VoiceModel;
 import com.example.AudIon.domain.user.User;
 import com.example.AudIon.domain.voice.VoiceFile;
+import com.example.AudIon.dto.common.PagedResponse;
 import com.example.AudIon.repository.model.VoiceModelRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -64,6 +67,62 @@ public class VoiceModelService {
         }
 
         return voiceModelRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    /**
+     * 사용자별 모델 목록 조회 (페이지네이션)
+     */
+    @Transactional(readOnly = true)
+    public PagedResponse<VoiceModel> getModelsByUserPaged(UUID userId, Pageable pageable) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+
+        Page<VoiceModel> page = voiceModelRepository.findByUserId(userId, pageable);
+        return PagedResponse.of(page.getContent(), page);
+    }
+
+    /**
+     * 지갑 주소로 모델 목록 조회 (페이지네이션)
+     */
+    @Transactional(readOnly = true)
+    public PagedResponse<VoiceModel> getModelsByWalletPaged(String walletAddress, Pageable pageable) {
+        if (!StringUtils.hasText(walletAddress)) {
+            throw new IllegalArgumentException("Wallet address cannot be null or empty");
+        }
+
+        Page<VoiceModel> page = voiceModelRepository.findByUserWalletAddress(walletAddress, pageable);
+        return PagedResponse.of(page.getContent(), page);
+    }
+
+    /**
+     * 사용자별 특정 상태의 모델들 조회 (페이지네이션)
+     */
+    @Transactional(readOnly = true)
+    public PagedResponse<VoiceModel> getModelsByUserAndStatus(UUID userId, VoiceModel.Status status, Pageable pageable) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+        if (status == null) {
+            throw new IllegalArgumentException("Status cannot be null");
+        }
+
+        Page<VoiceModel> page = voiceModelRepository.findByUserIdAndStatus(userId, status, pageable);
+        return PagedResponse.of(page.getContent(), page);
+    }
+
+    /**
+     * 모델명으로 검색 (페이지네이션)
+     */
+    @Transactional(readOnly = true)
+    public PagedResponse<VoiceModel> searchModelsByName(UUID userId, String modelName, Pageable pageable) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+
+        Page<VoiceModel> page = voiceModelRepository.findByUserIdAndModelNameContaining(
+                userId, modelName != null ? modelName : "", pageable);
+        return PagedResponse.of(page.getContent(), page);
     }
 
     @Transactional(readOnly = true)

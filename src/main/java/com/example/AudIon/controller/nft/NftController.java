@@ -3,11 +3,15 @@ package com.example.AudIon.controller.nft;
 import com.example.AudIon.config.security.JwtAuthenticationFilter.Web3AuthenticatedUser;
 import com.example.AudIon.domain.model.VoiceModel;
 import com.example.AudIon.domain.nft.Nft;
+import com.example.AudIon.dto.common.PageRequest;
+import com.example.AudIon.dto.common.PagedResponse;
 import com.example.AudIon.dto.nft.NftMintRequest;
 import com.example.AudIon.repository.model.VoiceModelRepository;
 import com.example.AudIon.repository.nft.NftRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -88,6 +92,28 @@ public class NftController {
 
         } catch (Exception e) {
             log.error("Error retrieving user NFTs: {}", authentication.getName(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "NFT 목록 조회에 실패했습니다."));
+        }
+    }
+
+    @GetMapping("/my-nfts/paged")
+    public ResponseEntity<?> getMyNftsPaged(
+            @Valid PageRequest pageRequest,
+            Authentication authentication) {
+        try {
+            Web3AuthenticatedUser authUser = (Web3AuthenticatedUser) authentication.getPrincipal();
+            String walletAddress = authUser.getWalletAddress();
+            
+            Page<Nft> page = nftRepository.findByOwnerWalletWithVoiceModel(walletAddress, pageRequest.toSpringPageRequest());
+            PagedResponse<Nft> result = PagedResponse.of(page.getContent(), page);
+            
+            return ResponseEntity.ok(result);
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid parameter in paged NFTs request: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error retrieving paged user NFTs: {}", authentication.getName(), e);
             return ResponseEntity.internalServerError().body(Map.of("error", "NFT 목록 조회에 실패했습니다."));
         }
     }

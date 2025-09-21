@@ -2,6 +2,7 @@ package com.example.AudIon.service.voice;
 
 import com.example.AudIon.domain.user.User;
 import com.example.AudIon.domain.voice.VoiceFile;
+import com.example.AudIon.dto.common.PagedResponse;
 import com.example.AudIon.dto.voice.VoiceUploadResponse;
 import com.example.AudIon.repository.user.UserRepository;
 import com.example.AudIon.repository.voice.VoiceFileRepository;
@@ -9,6 +10,8 @@ import com.example.AudIon.service.ai.AiService;
 import com.example.AudIon.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -137,6 +140,49 @@ public class VoiceService {
         }
 
         return voiceFileRepository.findByUserWalletAddressOrderByUploadedAtDesc(walletAddress);
+    }
+
+    /**
+     * 사용자별 음성 파일 목록 조회 (페이지네이션)
+     */
+    @Transactional(readOnly = true)
+    public PagedResponse<VoiceFile> getUserVoiceFilesPaged(String walletAddress, Pageable pageable) {
+        if (!StringUtils.hasText(walletAddress)) {
+            throw new IllegalArgumentException("Wallet address cannot be null or empty");
+        }
+
+        Page<VoiceFile> page = voiceFileRepository.findByUserWalletAddress(walletAddress, pageable);
+        return PagedResponse.of(page.getContent(), page);
+    }
+
+    /**
+     * 사용자별 특정 상태의 음성 파일 목록 조회 (페이지네이션)
+     */
+    @Transactional(readOnly = true)
+    public PagedResponse<VoiceFile> getUserVoiceFilesByStatus(String walletAddress, VoiceFile.Status status, Pageable pageable) {
+        if (!StringUtils.hasText(walletAddress)) {
+            throw new IllegalArgumentException("Wallet address cannot be null or empty");
+        }
+        if (status == null) {
+            throw new IllegalArgumentException("Status cannot be null");
+        }
+
+        Page<VoiceFile> page = voiceFileRepository.findByUserWalletAddressAndStatus(walletAddress, status, pageable);
+        return PagedResponse.of(page.getContent(), page);
+    }
+
+    /**
+     * 파일명으로 검색 (페이지네이션)
+     */
+    @Transactional(readOnly = true)
+    public PagedResponse<VoiceFile> searchUserVoiceFiles(String walletAddress, String filename, Pageable pageable) {
+        if (!StringUtils.hasText(walletAddress)) {
+            throw new IllegalArgumentException("Wallet address cannot be null or empty");
+        }
+
+        Page<VoiceFile> page = voiceFileRepository.findByUserWalletAddressAndOriginalFilenameContainingIgnoreCase(
+                walletAddress, filename != null ? filename : "", pageable);
+        return PagedResponse.of(page.getContent(), page);
     }
 
     /**

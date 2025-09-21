@@ -37,7 +37,6 @@ out/
 .vscode/
 
 ### Environment Variables ###
-.env
 .env.production
 
 ### Logs ###
@@ -47,5 +46,3 @@ logs/
 ### OS ###
 .DS_Store
 Thumbs.db
-
-.claude

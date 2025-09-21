@@ -1,6 +1,8 @@
 package com.example.AudIon.repository.model;
 
 import com.example.AudIon.domain.model.VoiceModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -125,4 +127,45 @@ public interface VoiceModelRepository extends JpaRepository<VoiceModel, UUID> {
     @Query("SELECT vm FROM VoiceModel vm WHERE vm.status = 'ERROR' " +
             "AND vm.createdAt < :beforeTime ORDER BY vm.createdAt ASC")
     List<VoiceModel> findOldErrorModels(@Param("beforeTime") LocalDateTime beforeTime);
+
+    // Pagination methods
+    /**
+     * 사용자별 모델 목록 조회 (페이지네이션)
+     */
+    Page<VoiceModel> findByUserId(UUID userId, Pageable pageable);
+
+    /**
+     * 사용자 지갑 주소로 모델 목록 조회 (페이지네이션)
+     */
+    @Query("SELECT vm FROM VoiceModel vm WHERE vm.user.walletAddress = :walletAddress")
+    Page<VoiceModel> findByUserWalletAddress(@Param("walletAddress") String walletAddress, Pageable pageable);
+
+    /**
+     * 특정 상태의 모델들 조회 (페이지네이션)
+     */
+    Page<VoiceModel> findByStatus(VoiceModel.Status status, Pageable pageable);
+
+    /**
+     * 사용자별 특정 상태의 모델들 조회 (페이지네이션)
+     */
+    Page<VoiceModel> findByUserIdAndStatus(UUID userId, VoiceModel.Status status, Pageable pageable);
+
+    /**
+     * 모델명으로 검색 (페이지네이션)
+     */
+    Page<VoiceModel> findByModelNameContainingIgnoreCase(String modelName, Pageable pageable);
+
+    /**
+     * 사용자별 모델명 검색 (페이지네이션)
+     */
+    @Query("SELECT vm FROM VoiceModel vm WHERE vm.user.id = :userId " +
+            "AND LOWER(vm.modelName) LIKE LOWER(CONCAT('%', :modelName, '%'))")
+    Page<VoiceModel> findByUserIdAndModelNameContaining(@Param("userId") UUID userId,
+                                                        @Param("modelName") String modelName, 
+                                                        Pageable pageable);
+
+    /**
+     * 특정 기간 내 생성된 모델들 (페이지네이션)
+     */
+    Page<VoiceModel> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end, Pageable pageable);
 }

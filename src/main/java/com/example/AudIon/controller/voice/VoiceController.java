@@ -1,8 +1,12 @@
 package com.example.AudIon.controller.voice;
 
 import com.example.AudIon.config.security.JwtAuthenticationFilter.Web3AuthenticatedUser;
+import com.example.AudIon.domain.voice.VoiceFile;
+import com.example.AudIon.dto.common.PageRequest;
+import com.example.AudIon.dto.common.PagedResponse;
 import com.example.AudIon.dto.voice.VoiceUploadResponse;
 import com.example.AudIon.service.voice.VoiceService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -79,6 +83,41 @@ public class VoiceController {
 
         } catch (Exception e) {
             log.error("Error retrieving user voice files: {}", authentication.getName(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "파일 목록 조회에 실패했습니다."));
+        }
+    }
+
+    @GetMapping("/my-files/paged")
+    public ResponseEntity<?> getMyVoiceFilesPaged(
+            @Valid PageRequest pageRequest,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String search,
+            Authentication authentication) {
+        try {
+            Web3AuthenticatedUser user = (Web3AuthenticatedUser) authentication.getPrincipal();
+            String walletAddress = user.getWalletAddress();
+            
+            PagedResponse<VoiceFile> result;
+            
+            if (status != null && !status.trim().isEmpty()) {
+                // Filter by status
+                VoiceFile.Status fileStatus = VoiceFile.Status.valueOf(status.toUpperCase());
+                result = voiceService.getUserVoiceFilesByStatus(walletAddress, fileStatus, pageRequest.toSpringPageRequest());
+            } else if (search != null && !search.trim().isEmpty()) {
+                // Search by filename
+                result = voiceService.searchUserVoiceFiles(walletAddress, search, pageRequest.toSpringPageRequest());
+            } else {
+                // Get all files
+                result = voiceService.getUserVoiceFilesPaged(walletAddress, pageRequest.toSpringPageRequest());
+            }
+            
+            return ResponseEntity.ok(result);
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid parameter in paged voice files request: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error retrieving paged user voice files: {}", authentication.getName(), e);
             return ResponseEntity.internalServerError().body(Map.of("error", "파일 목록 조회에 실패했습니다."));
         }
     }

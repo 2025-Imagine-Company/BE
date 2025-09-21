@@ -1,12 +1,12 @@
 # Build artifacts
 build/
+!build/libs/*.jar
 target/
 .gradle/
 
 # IDE files
 .idea/
 .vscode/
-.claude
 *.iml
 *.ipr
 *.iws
