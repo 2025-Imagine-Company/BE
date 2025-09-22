@@ -3,8 +3,10 @@ services:
     build: .
     ports:
       - "8080:8080"
+    env_file:
+      - .env.production
     environment:
-      - DATABASE_URL=jdbc:postgresql://audiondb.clcm4i6k60dp.ap-northeast-2.rds.amazonaws.com:5432/audiondb
+      - DATABASE_URL=jdbc:postgresql://audion.clcm4i6k60dp.ap-northeast-2.rds.amazonaws.com:5432/audiondb
       - DATABASE_USERNAME=${DATABASE_USERNAME}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
