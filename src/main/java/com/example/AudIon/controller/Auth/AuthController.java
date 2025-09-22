@@ -3,6 +3,7 @@ package com.example.AudIon.controller.Auth;
 import com.example.AudIon.dto.auth.LoginRequest;
 import com.example.AudIon.service.Auth.AuthService;
 import com.example.AudIon.service.Auth.JwtUtil;
+import com.example.AudIon.repository.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/auth")
@@ -19,6 +21,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
     /**
      * Modern Web3 Login (단일 단계)
@@ -71,8 +74,13 @@ public class AuthController {
                         String walletAddress = jwtUtil.getWalletAddress(jws).orElse("");
                         long remainingSeconds = jwtUtil.getRemainingLifetimeSeconds(jws);
 
+                        String nickname = userRepository.findById(UUID.fromString(userId))
+                                .map(user -> user.getNickname())
+                                .orElse(null);
+
                         return ResponseEntity.ok(Map.of(
                                 "userId", userId,
+                                "nickname", nickname != null ? nickname : "Sally",
                                 "walletAddress", walletAddress,
                                 "tokenRemainingSeconds", remainingSeconds,
                                 "isValid", true
